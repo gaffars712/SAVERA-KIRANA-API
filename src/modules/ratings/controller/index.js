@@ -1,0 +1,1 @@
+module.exports.addRating = require('./addRating.controller')

@@ -1,0 +1,6 @@
+module.exports.updateProfile = require("./updateProfile.service")
+module.exports.updatePhoneNumber = require("./updatePhoneNumber.service")
+module.exports.updateUserLocation = require("./updateLocation.service")
+module.exports.sendPhoneUpdateOTP = require("./sendPhoneUpdateOTP.service")
+module.exports.getUsers = require("./getallUser.services")
+module.exports.updateUser = require("./updateUser.services")
