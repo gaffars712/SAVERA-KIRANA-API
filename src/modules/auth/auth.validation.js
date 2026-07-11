@@ -40,6 +40,15 @@ const adminLogin = {
   }),
 };
 
+const adminRequestEmailOtp = { body: Joi.object({ email }) };
+
+const adminVerifyEmailOtp = {
+  body: Joi.object({
+    email,
+    otp: Joi.string().length(6).pattern(/^[0-9]+$/).required(),
+  }),
+};
+
 const refresh = { body: Joi.object({ refreshToken: Joi.string().required() }) };
 
 const firebasePhone = {
@@ -56,6 +65,8 @@ module.exports = {
   verifyEmailOtp,
   updateProfile,
   adminLogin,
+  adminRequestEmailOtp,
+  adminVerifyEmailOtp,
   refresh,
   firebasePhone,
 };

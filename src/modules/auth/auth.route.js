@@ -20,8 +20,12 @@ router.post('/firebase/phone', validate(validation.firebasePhone), controller.fi
 /* Profile — update name / add phone at checkout */
 router.patch('/me', auth('manageOwnProfile'), validate(validation.updateProfile), controller.updateProfile);
 
-/* Admin login */
+/* Admin login (legacy password flow) */
 router.post('/admin/login', validate(validation.adminLogin), controller.adminLogin);
+
+/* Admin email OTP (primary admin login flow — super/store/delivery managers) */
+router.post('/admin/email/request', validate(validation.adminRequestEmailOtp), controller.adminRequestEmailOtp);
+router.post('/admin/email/verify', validate(validation.adminVerifyEmailOtp), controller.adminVerifyEmailOtp);
 
 /* Common */
 router.post('/refresh', validate(validation.refresh), controller.refresh);

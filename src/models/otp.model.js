@@ -9,7 +9,7 @@ const OtpSchema = mongoose.Schema(
     otp: { type: String, required: true },
     purpose: {
       type: String,
-      enum: ['login', 'phoneVerify', 'emailVerify'],
+      enum: ['login', 'phoneVerify', 'emailVerify', 'adminLogin'],
       default: 'login',
     },
     attempts: { type: Number, default: 0 },

@@ -1,6 +1,7 @@
 const httpStatus = require('http-status');
 const { Admin } = require('../../models');
 const ApiError = require('../../utils/ApiError');
+const emailService = require('../../services/email.service');
 
 const listAdmins = async (filter = {}, options = {}) => {
   const page = Math.max(1, parseInt(options.page, 10) || 1);
@@ -31,7 +32,25 @@ const createAdmin = async (data, createdBy) => {
   if (await Admin.isEmailTaken(data.email)) {
     throw new ApiError(httpStatus.CONFLICT, 'Email already taken');
   }
-  return Admin.create({ ...data, createdBy });
+  const admin = await Admin.create({
+    ...data,
+    createdBy,
+    invitedAt: new Date(),
+    isActivated: false,
+  });
+
+  // Fire-and-forget invite email — do not block admin creation on SMTP hiccups.
+  let inviter = null;
+  if (createdBy) inviter = await Admin.findById(createdBy).select('name');
+  emailService
+    .sendAdminInvite(admin.email, {
+      name: admin.name,
+      role: admin.role,
+      invitedByName: inviter?.name || 'Savera Kirana',
+    })
+    .catch(() => {});
+
+  return admin;
 };
 
 const updateAdmin = async (id, data) => {

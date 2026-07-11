@@ -52,7 +52,7 @@ const transition = {
   params: Joi.object({ id: objectId.required() }),
   body: Joi.object({
     status: Joi.string()
-      .valid('packed', 'out_for_delivery', 'delivered', 'preparing', 'ready', 'picked_up', 'cancelled')
+      .valid('accepted', 'packed', 'out_for_delivery', 'delivered', 'preparing', 'ready', 'picked_up', 'cancelled')
       .required(),
     reason: Joi.string().max(200).allow(''),
   }),
@@ -71,6 +71,15 @@ const verifyPickup = {
   }),
 };
 
+const confirmPayment = {
+  params: Joi.object({ id: objectId.required() }),
+  body: Joi.object({
+    amount: Joi.number().min(0).required(),
+    receivedByName: Joi.string().max(80).allow(''),
+    note: Joi.string().max(300).allow(''),
+  }),
+};
+
 module.exports = {
   create,
   verify,
@@ -81,4 +90,5 @@ module.exports = {
   transition,
   assign,
   verifyPickup,
+  confirmPayment,
 };

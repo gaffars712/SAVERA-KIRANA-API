@@ -63,6 +63,11 @@ const orderSchema = new mongoose.Schema(
       razorpaySignature: String,
       paidAt: Date,
       failureReason: String,
+      // COD cash tracking — for delivery (rider took cash) or pickup (shop owner took cash)
+      receivedAmount: Number,
+      receivedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'admins' },
+      receivedByName: String, // "Rider Sunil V." or "Store Manager Piyush"
+      receivedNote: String,
     },
 
     // Delivery-specific
@@ -84,6 +89,7 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: [
         'placed',
+        'accepted',
         'packed', 'out_for_delivery', 'delivered',
         'preparing', 'ready', 'picked_up',
         'cancelled', 'refunded',
@@ -91,6 +97,8 @@ const orderSchema = new mongoose.Schema(
       default: 'placed',
       index: true,
     },
+    acceptedAt: Date,
+    acceptedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'admins' },
     cancelReason: String,
     notes: String,
 

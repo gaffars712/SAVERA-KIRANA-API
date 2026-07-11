@@ -20,12 +20,14 @@ const adminSchema = mongoose.Schema(
     phone: { type: String, trim: true },
     password: {
       type: String,
-      required: true,
       minlength: 6,
       trim: true,
       private: true,
       select: false,
     },
+    isActivated: { type: Boolean, default: false },
+    invitedAt: { type: Date },
+    activatedAt: { type: Date },
     role: {
       type: String,
       enum: adminRoles,
@@ -49,11 +51,12 @@ adminSchema.statics.isEmailTaken = async function (email, excludeAdminId) {
 };
 
 adminSchema.methods.isPasswordMatch = async function (password) {
+  if (!this.password) return false;
   return bcrypt.compare(password, this.password);
 };
 
 adminSchema.pre('save', async function (next) {
-  if (this.isModified('password')) {
+  if (this.isModified('password') && this.password) {
     this.password = await bcrypt.hash(this.password, 10);
   }
   next();

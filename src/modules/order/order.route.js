@@ -25,5 +25,6 @@ adminRouter.post('/:id/assign-rider', validate(validation.assign), controller.ad
 adminRouter.post('/:id/preparing', validate(validation.byId), controller.startPreparing);
 adminRouter.post('/:id/ready', validate(validation.byId), controller.markReady);
 adminRouter.post('/:id/verify-pickup', validate(validation.verifyPickup), controller.verifyPickup);
+adminRouter.post('/:id/confirm-payment', validate(validation.confirmPayment), controller.confirmPayment);
 
 module.exports = { customerRouter, adminRouter };

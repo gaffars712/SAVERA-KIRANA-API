@@ -62,6 +62,11 @@ const verifyPickup = catchAsync(async (req, res) => {
   res.json({ success: true, data });
 });
 
+const confirmPayment = catchAsync(async (req, res) => {
+  const data = await service.confirmPayment(req.params.id, req.body, req.user._id);
+  res.json({ success: true, data });
+});
+
 module.exports = {
   create,
   verifyPayment,
@@ -75,4 +80,5 @@ module.exports = {
   startPreparing,
   markReady,
   verifyPickup,
+  confirmPayment,
 };

@@ -8,7 +8,7 @@ const create = {
     name: Joi.string().min(2).max(80).required(),
     email: Joi.string().email().required(),
     phone: Joi.string().pattern(/^\+?[0-9]{10,15}$/).optional().allow(''),
-    password: Joi.string().min(6).required(),
+    password: Joi.string().min(6).optional(),
     role: Joi.string().valid(...adminRoles).required(),
     avatarUrl: Joi.string().uri().allow('').optional(),
     active: Joi.boolean().optional(),

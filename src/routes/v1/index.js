@@ -19,6 +19,7 @@ const riderRoute = require('../../modules/rider/rider.route');
 const wishlistRoute = require('../../modules/wishlist/wishlist.route');
 const waitlistRoute = require('../../modules/waitlist/waitlist.route');
 const statsRoute = require('../../modules/stats/stats.route');
+const adminUserRoute = require('../../modules/adminUser/adminUser.route');
 
 const router = express.Router();
 
@@ -50,6 +51,7 @@ const routes = [
   { path: '/admin/orders', route: orderRoutes.adminRouter },
   { path: '/admin/riders', route: riderRoute },
   { path: '/admin/stats', route: statsRoute },
+  { path: '/admin/users', route: adminUserRoute },
 ];
 
 routes.forEach((r) => router.use(r.path, r.route));

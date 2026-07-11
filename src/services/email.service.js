@@ -289,4 +289,107 @@ const sendOrderConfirmation = (email, order) =>
       `Thank you for shopping with Savera Kirana!`,
   });
 
-module.exports = { sendMail, sendOtp, sendOrderConfirmation, isConfigured };
+/* ─────────────────── Admin invite ─────────────────── */
+
+const roleLabel = (role) => {
+  switch (role) {
+    case 'superAdmin': return 'Super Admin';
+    case 'storeManager': return 'Store Manager';
+    case 'deliveryManager': return 'Delivery Manager';
+    default: return role;
+  }
+};
+
+const adminInviteTemplate = ({ name, role, invitedByName }) => `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F8F9FC;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="padding:40px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="520" style="max-width:520px;background:#FFFFFF;border-radius:20px;overflow:hidden;box-shadow:0 4px 16px rgba(0,108,76,0.08);">
+          <tr>
+            <td style="background:linear-gradient(135deg,#006C4C 0%,#0DA678 100%);padding:36px 32px;color:#FFFFFF;text-align:center;">
+              <div style="font-size:56px;line-height:1;margin-bottom:8px;">🔑</div>
+              <h1 style="margin:0;font-size:26px;font-weight:700;">You're on the team!</h1>
+              <p style="margin:8px 0 0;opacity:0.9;font-size:15px;">Welcome to Savera Kirana Admin</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 16px;color:#3D4A43;font-size:15px;line-height:1.6;">
+                Hi <strong>${name}</strong>,
+              </p>
+              <p style="margin:0 0 20px;color:#3D4A43;font-size:15px;line-height:1.6;">
+                ${invitedByName || 'The Savera Kirana team'} has added you as
+                <strong style="color:#006C4C;">${roleLabel(role)}</strong>
+                on the Savera Kirana Admin panel.
+              </p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F2F4F6;border-radius:12px;">
+                <tr>
+                  <td style="padding:20px;">
+                    <div style="font-size:11px;font-weight:700;color:#6D7A72;text-transform:uppercase;letter-spacing:1.5px;">How to sign in</div>
+                    <p style="margin:8px 0 0;color:#3D4A43;font-size:14px;line-height:1.6;">
+                      1. Open the admin panel<br>
+                      2. Enter this email address: <strong>${'{{EMAIL}}'}</strong><br>
+                      3. We'll send you a one-time code — no password needed
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:24px 0 0;color:#6D7A72;font-size:13px;line-height:1.5;">
+                Wasn't expecting this? Reply to this email and let us know.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 32px 28px;background:#F2F4F6;text-align:center;">
+              <p style="margin:0 0 8px;color:#191C1E;font-size:13px;font-weight:600;">Savera Kirana</p>
+              <p style="margin:0;color:#6D7A72;font-size:11px;">
+                Need help? <a href="mailto:support@saverakirana.in" style="color:#006C4C;text-decoration:none;font-weight:600;">support@saverakirana.in</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+const sendAdminInvite = (email, { name, role, invitedByName }) =>
+  sendMail({
+    to: email,
+    subject: `🔑 You're invited to Savera Kirana Admin (${roleLabel(role)})`,
+    html: adminInviteTemplate({ name, role, invitedByName }).replace('{{EMAIL}}', email),
+    text:
+      `Hi ${name},\n\n` +
+      `${invitedByName || 'The Savera Kirana team'} has added you as ${roleLabel(role)} on the Savera Kirana Admin panel.\n\n` +
+      `To sign in:\n` +
+      `1. Open the admin panel\n` +
+      `2. Enter your email: ${email}\n` +
+      `3. We'll email you a one-time code — no password required\n\n` +
+      `— Team Savera Kirana`,
+  });
+
+/* ─────────────────── Admin OTP ─────────────────── */
+
+const sendAdminOtp = (email, code) =>
+  sendMail({
+    to: email,
+    subject: `${code} is your Savera Kirana Admin login code`,
+    text:
+      `Your Savera Kirana Admin login code is: ${code}\n\n` +
+      `Valid for 5 minutes. Don't share this code with anyone.\n\n` +
+      `— Team Savera Kirana`,
+    html: otpTemplate(code),
+  });
+
+module.exports = {
+  sendMail,
+  sendOtp,
+  sendOrderConfirmation,
+  sendAdminInvite,
+  sendAdminOtp,
+  isConfigured,
+};

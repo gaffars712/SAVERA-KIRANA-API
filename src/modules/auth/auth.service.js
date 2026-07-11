@@ -133,6 +133,67 @@ const adminLogin = async (email, password) => {
   return { admin: safe, tokens };
 };
 
+/* ─────────────────────── Admin email OTP ─────────────────────── */
+
+const adminRequestEmailOtp = async (email) => {
+  const emailLc = email.toLowerCase();
+  const admin = await Admin.findOne({ email: emailLc });
+  if (!admin) throw new ApiError(httpStatus.UNAUTHORIZED, 'Not an admin email');
+  if (!admin.active) throw new ApiError(httpStatus.UNAUTHORIZED, 'Admin account is deactivated');
+
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const expiresAt = moment().add(OTP_TTL_MINUTES, 'minutes').toDate();
+  const otpHash = await bcrypt.hash(code, 8);
+
+  await OTP.deleteMany({ email: emailLc, purpose: 'adminLogin' });
+  await OTP.create({ email: emailLc, otp: otpHash, purpose: 'adminLogin', expiresAt });
+
+  const result = await emailService.sendAdminOtp(emailLc, code);
+  const smtpMissing = !!result?.dev;
+  return {
+    email: emailLc,
+    expiresInSeconds: OTP_TTL_MINUTES * 60,
+    devOtp: smtpMissing && config.env === 'development' ? code : undefined,
+  };
+};
+
+const adminVerifyEmailOtp = async (email, code) => {
+  const emailLc = email.toLowerCase();
+  const record = await OTP.findOne({ email: emailLc, purpose: 'adminLogin' }).sort({ createdAt: -1 });
+  if (!record) throw new ApiError(httpStatus.BAD_REQUEST, 'OTP not requested');
+  if (record.expiresAt < new Date()) {
+    await OTP.deleteOne({ _id: record._id });
+    throw new ApiError(httpStatus.BAD_REQUEST, 'OTP expired');
+  }
+  if (record.attempts >= 5) {
+    await OTP.deleteOne({ _id: record._id });
+    throw new ApiError(httpStatus.TOO_MANY_REQUESTS, 'Too many attempts, request a new OTP');
+  }
+  const ok = await bcrypt.compare(String(code), record.otp);
+  if (!ok) {
+    record.attempts += 1;
+    await record.save();
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid OTP');
+  }
+  await OTP.deleteOne({ _id: record._id });
+
+  const admin = await Admin.findOne({ email: emailLc });
+  if (!admin) throw new ApiError(httpStatus.UNAUTHORIZED, 'Admin no longer exists');
+  if (!admin.active) throw new ApiError(httpStatus.UNAUTHORIZED, 'Admin account is deactivated');
+
+  if (!admin.isActivated) {
+    admin.isActivated = true;
+    admin.activatedAt = new Date();
+  }
+  admin.lastLoginAt = new Date();
+  await admin.save();
+
+  const tokens = issueAuthTokens({ _id: admin._id, role: admin.role });
+  const safe = admin.toObject();
+  delete safe.password;
+  return { admin: safe, tokens };
+};
+
 /* ─────────────────────── Refresh ─────────────────────── */
 
 const refreshTokens = async (refreshToken) => {
@@ -282,6 +343,8 @@ module.exports = {
   verifyEmailOtp,
   updateProfile,
   adminLogin,
+  adminRequestEmailOtp,
+  adminVerifyEmailOtp,
   refreshTokens,
   issueAuthTokens,
   firebasePhoneVerify,

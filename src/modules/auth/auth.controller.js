@@ -46,6 +46,16 @@ const adminLogin = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).json({ success: true, message: 'Logged in', data: result });
 });
 
+const adminRequestEmailOtp = catchAsync(async (req, res) => {
+  const data = await authService.adminRequestEmailOtp(req.body.email);
+  res.status(httpStatus.OK).json({ success: true, message: 'OTP sent to admin email', data });
+});
+
+const adminVerifyEmailOtp = catchAsync(async (req, res) => {
+  const result = await authService.adminVerifyEmailOtp(req.body.email, req.body.otp);
+  res.status(httpStatus.OK).json({ success: true, message: 'Logged in', data: result });
+});
+
 const firebasePhone = catchAsync(async (req, res) => {
   const { idToken, name } = req.body;
   const result = await authService.firebasePhoneVerify(idToken, name);
@@ -72,6 +82,8 @@ module.exports = {
   verifyEmailOtp,
   updateProfile,
   adminLogin,
+  adminRequestEmailOtp,
+  adminVerifyEmailOtp,
   refresh,
   me,
   firebasePhone,

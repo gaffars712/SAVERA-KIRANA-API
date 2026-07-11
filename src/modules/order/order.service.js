@@ -198,10 +198,29 @@ const listMine = (userId, filter = {}) => {
 /* ─────────────────── Admin: list + detail + state ─────────────────── */
 
 const adminList = async (filter = {}) => {
+  const { User } = require('../../models');
   const q = {};
   if (filter.status && filter.status !== 'all') q.status = filter.status;
   if (filter.fulfillmentType) q.fulfillmentType = filter.fulfillmentType;
-  if (filter.q) q.code = new RegExp(filter.q, 'i');
+
+  // Free-text search across order code, pickup code, and customer name/email/phone.
+  // Regexes are anchored implicitly via .*match.* — safe on small kirana workloads.
+  const term = (filter.q || '').trim();
+  if (term) {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const rx = new RegExp(escaped, 'i');
+    const userIds = await User.find({
+      $or: [{ name: rx }, { email: rx }, { phone: rx }],
+    })
+      .select('_id')
+      .limit(500)
+      .lean();
+    const orClauses = [{ code: rx }];
+    if (userIds.length) orClauses.push({ user: { $in: userIds.map((u) => u._id) } });
+    if (/^\d{3,6}$/.test(term)) orClauses.push({ 'pickup.code': term });
+    q.$or = orClauses;
+  }
+
   const page = Math.max(1, parseInt(filter.page, 10) || 1);
   const limit = Math.min(100, parseInt(filter.limit, 10) || 20);
   const [items, total] = await Promise.all([
@@ -221,24 +240,82 @@ const adminGet = async (id) => {
   return o;
 };
 
+// Two-branch state machine. All orders start at `placed` → admin `accepted` → then
+// diverge into delivery (packed → out_for_delivery → delivered) or pickup
+// (preparing → ready → picked_up). Customer can only cancel while `placed`.
 const nextStatus = {
-  placed: ['packed', 'cancelled'],                      // delivery
+  placed: ['accepted', 'cancelled'],
+  accepted: (o) =>
+    o.fulfillmentType === 'delivery'
+      ? ['packed', 'cancelled']
+      : ['preparing', 'cancelled'],
   packed: ['out_for_delivery', 'cancelled'],
   out_for_delivery: ['delivered'],
-  preparing: ['ready', 'cancelled'],                     // pickup
+  preparing: ['ready', 'cancelled'],
   ready: ['picked_up'],
 };
 
 const transitionStatus = async (id, newStatus, adminId) => {
   const o = await Order.findById(id);
   if (!o) throw new ApiError(httpStatus.NOT_FOUND, 'Order not found');
-  const allowed = nextStatus[o.status] || [];
+  const raw = nextStatus[o.status];
+  const allowed = typeof raw === 'function' ? raw(o) : (raw || []);
   if (!allowed.includes(newStatus)) {
     throw new ApiError(httpStatus.BAD_REQUEST, `Cannot transition ${o.status} → ${newStatus}`);
   }
   o.status = newStatus;
   o.timeline.push({ status: newStatus, by: String(adminId) });
+  if (newStatus === 'accepted') {
+    o.acceptedAt = new Date();
+    o.acceptedBy = adminId;
+  }
   if (newStatus === 'ready') o.pickup.readyAt = new Date();
+
+  // Auto-mark COD as paid when delivery order is delivered — rider took cash on arrival
+  if (
+    newStatus === 'delivered' &&
+    o.payment.method === 'cod' &&
+    o.payment.status !== 'paid'
+  ) {
+    o.payment.status = 'paid';
+    o.payment.paidAt = new Date();
+    o.payment.receivedAmount = o.total;
+    o.payment.receivedBy = adminId;
+    o.payment.receivedByName = o.riderSnapshot?.name
+      ? `Rider ${o.riderSnapshot.name}`
+      : 'Rider';
+    o.payment.receivedNote = 'Auto-marked on delivery confirmation';
+  }
+
+  await o.save();
+  return o;
+};
+
+/**
+ * Explicit COD payment confirmation. Used when cash was collected but the
+ * status transition happens separately, or for orders that got stuck as
+ * "delivered/picked_up" while payment stayed "pending".
+ */
+const confirmPayment = async (id, { amount, note, receivedByName }, adminId) => {
+  const o = await Order.findById(id);
+  if (!o) throw new ApiError(httpStatus.NOT_FOUND, 'Order not found');
+  if (o.payment.status === 'paid') {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Payment already confirmed');
+  }
+  if (o.payment.method !== 'cod') {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Only COD orders need manual confirmation');
+  }
+  o.payment.status = 'paid';
+  o.payment.paidAt = new Date();
+  o.payment.receivedAmount = Number(amount) || o.total;
+  o.payment.receivedBy = adminId;
+  o.payment.receivedByName = receivedByName || 'Admin';
+  o.payment.receivedNote = note || '';
+  o.timeline.push({
+    status: `payment_confirmed:₹${o.payment.receivedAmount}`,
+    by: String(adminId),
+    note,
+  });
   await o.save();
   return o;
 };
@@ -248,6 +325,14 @@ const cancel = async (id, reason, adminId, actor = 'admin') => {
   if (!o) throw new ApiError(httpStatus.NOT_FOUND, 'Order not found');
   if (['delivered', 'picked_up', 'cancelled'].includes(o.status)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Cannot cancel this order');
+  }
+  // Customers can only cancel BEFORE the shop accepts. Once accepted, cash /
+  // stock has been committed and only an admin can cancel.
+  if (actor === 'customer' && o.status !== 'placed') {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'This order has already been accepted by the shop and cannot be cancelled from your side. Please contact support.'
+    );
   }
   o.status = 'cancelled';
   o.cancelReason = reason || `Cancelled by ${actor}`;
@@ -262,7 +347,7 @@ const cancel = async (id, reason, adminId, actor = 'admin') => {
 const startPreparing = async (id) => {
   const o = await Order.findById(id);
   if (!o || o.fulfillmentType !== 'pickup') throw new ApiError(httpStatus.BAD_REQUEST, 'Not a pickup order');
-  if (o.status !== 'placed') throw new ApiError(httpStatus.BAD_REQUEST, `Order is ${o.status}`);
+  if (!['placed', 'accepted'].includes(o.status)) throw new ApiError(httpStatus.BAD_REQUEST, `Order is ${o.status}`);
   o.status = 'preparing';
   o.timeline.push({ status: 'preparing', by: 'system' });
   await o.save();
@@ -272,7 +357,7 @@ const startPreparing = async (id) => {
 const markReady = async (id, adminId) => {
   const o = await Order.findById(id).populate('user', 'phone name');
   if (!o || o.fulfillmentType !== 'pickup') throw new ApiError(httpStatus.BAD_REQUEST, 'Not a pickup order');
-  if (o.status !== 'placed' && o.status !== 'preparing') {
+  if (!['placed', 'accepted', 'preparing'].includes(o.status)) {
     throw new ApiError(httpStatus.BAD_REQUEST, `Order is ${o.status}`);
   }
   o.status = 'ready';
@@ -346,4 +431,5 @@ module.exports = {
   markReady,
   verifyPickupCode,
   assignRider,
+  confirmPayment,
 };

@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(node -e \"require\\('./src/modules/auth/auth.service'\\); require\\('./src/modules/auth/auth.controller'\\); require\\('./src/modules/auth/auth.validation'\\); require\\('./src/modules/auth/auth.route'\\); require\\('./src/modules/order/order.service'\\); require\\('./src/modules/order/order.controller'\\); require\\('./src/modules/order/order.validation'\\); require\\('./src/modules/order/order.route'\\); require\\('./src/modules/admin/admin.service'\\); require\\('./src/modules/admin/admin.controller'\\); require\\('./src/modules/admin/admin.validation'\\); require\\('./src/modules/admin/admin.route'\\); require\\('./src/services/email.service'\\); require\\('./src/models'\\); console.log\\('OK — all modules load cleanly'\\);\")",
+      "Bash(node -e \"require\\('./src/routes/v1'\\); require\\('./src/modules/order/order.service'\\); require\\('./src/modules/order/order.validation'\\); require\\('./src/modules/adminUser/adminUser.service'\\); require\\('./src/modules/adminUser/adminUser.route'\\); require\\('./src/models/order.model'\\); console.log\\('OK — routes + order + adminUser modules load cleanly'\\);\")",
+      "Bash(node -e \"require\\('./src/modules/adminUser/adminUser.service'\\); require\\('./src/modules/order/order.service'\\); console.log\\('OK'\\);\")",
+      "Bash(node -e \"require\\('./src/modules/order/order.service'\\); require\\('./src/modules/order/order.controller'\\); console.log\\('OK'\\);\")",
+      "Bash(node -e \"const p=require\\('@babel/parser'\\); const fs=require\\('fs'\\); ['src/pages/OrderDetail.jsx','src/pages/Orders.jsx','src/pages/PickupQueue.jsx'].forEach\\(f => { try { p.parse\\(fs.readFileSync\\(f,'utf8'\\),{sourceType:'module',plugins:['jsx']}\\); console.log\\(f,'OK'\\); } catch\\(e\\){ console.log\\(f,'FAIL',e.message\\); } }\\);\")"
     ]
   }
 }
