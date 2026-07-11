@@ -8,6 +8,7 @@
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",
     "seed:super-admin": "cross-env NODE_ENV=development node src/scripts/seedSuperAdmin.js",
     "seed:catalog": "cross-env NODE_ENV=development node src/scripts/seedCatalog.js",
+    "upload:stitch": "cross-env NODE_ENV=development node src/scripts/uploadStitchImages.js",
     "smoke:checkout": "cross-env NODE_ENV=development node src/scripts/smokeTestCheckout.js"
   },
   "author": "Piyush",

@@ -6,7 +6,8 @@
       "Bash(node -e \"require\\('./src/routes/v1'\\); require\\('./src/modules/order/order.service'\\); require\\('./src/modules/order/order.validation'\\); require\\('./src/modules/adminUser/adminUser.service'\\); require\\('./src/modules/adminUser/adminUser.route'\\); require\\('./src/models/order.model'\\); console.log\\('OK — routes + order + adminUser modules load cleanly'\\);\")",
       "Bash(node -e \"require\\('./src/modules/adminUser/adminUser.service'\\); require\\('./src/modules/order/order.service'\\); console.log\\('OK'\\);\")",
       "Bash(node -e \"require\\('./src/modules/order/order.service'\\); require\\('./src/modules/order/order.controller'\\); console.log\\('OK'\\);\")",
-      "Bash(node -e \"const p=require\\('@babel/parser'\\); const fs=require\\('fs'\\); ['src/pages/OrderDetail.jsx','src/pages/Orders.jsx','src/pages/PickupQueue.jsx'].forEach\\(f => { try { p.parse\\(fs.readFileSync\\(f,'utf8'\\),{sourceType:'module',plugins:['jsx']}\\); console.log\\(f,'OK'\\); } catch\\(e\\){ console.log\\(f,'FAIL',e.message\\); } }\\);\")"
+      "Bash(node -e \"const p=require\\('@babel/parser'\\); const fs=require\\('fs'\\); ['src/pages/OrderDetail.jsx','src/pages/Orders.jsx','src/pages/PickupQueue.jsx'].forEach\\(f => { try { p.parse\\(fs.readFileSync\\(f,'utf8'\\),{sourceType:'module',plugins:['jsx']}\\); console.log\\(f,'OK'\\); } catch\\(e\\){ console.log\\(f,'FAIL',e.message\\); } }\\);\")",
+      "Bash(node -e \"const s = require\\('./src/scripts/uploadStitchImages.js'\\); void s;\")"
     ]
   }
 }
