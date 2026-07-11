@@ -5,7 +5,8 @@ const { CUSTOMER } = require('../config/roles');
 const counterIncrementor = require('../utils/counterIncrementer');
 
 /**
- * Customer model. Customer login is OTP-based on phone.
+ * Customer model. Email is the primary identifier — login via email OTP.
+ * Phone is optional and collected at first checkout for delivery contact.
  * Admins live in a separate `admins` collection.
  */
 const userSchema = mongoose.Schema(
@@ -13,19 +14,20 @@ const userSchema = mongoose.Schema(
     name: { type: String, trim: true, default: '' },
     email: {
       type: String,
+      required: true,
       trim: true,
       lowercase: true,
-      sparse: true,
+      unique: true,
+      index: true,
       validate(value) {
-        if (value && !validator.isEmail(value)) throw new Error('Invalid email');
+        if (!validator.isEmail(value)) throw new Error('Invalid email');
       },
     },
     phone: {
       type: String,
       trim: true,
-      required: true,
-      unique: true,
       index: true,
+      sparse: true, // optional — set at first checkout
     },
     role: {
       type: String,
@@ -48,6 +50,11 @@ const userSchema = mongoose.Schema(
 
 userSchema.plugin(toJSON);
 userSchema.plugin(paginate);
+
+userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
+  const user = await this.findOne({ email: email.toLowerCase(), _id: { $ne: excludeUserId } });
+  return !!user;
+};
 
 userSchema.statics.isPhoneTaken = async function (phone, excludeUserId) {
   const user = await this.findOne({ phone, _id: { $ne: excludeUserId } });

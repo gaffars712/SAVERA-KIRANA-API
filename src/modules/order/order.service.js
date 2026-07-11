@@ -97,9 +97,8 @@ const createOrder = async (userId, body) => {
     ? generatePickupCode(settings.fulfillment.pickupCodeLength)
     : null;
 
-  // 6. Adjust payment total for COD extra
-  const codExtra = payment.method === 'cod' ? 10 : 0;
-  const grandTotal = totals.total + codExtra;
+  // 6. No COD surcharge — customer pays exactly the cart total
+  const grandTotal = totals.total;
 
   // 7. Razorpay order (skipped for COD)
   let rzpOrder = null;

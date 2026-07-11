@@ -30,6 +30,18 @@ const envVarsSchema = Joi.object()
     TWILIO_MESSAGING_SERVICE_SID: Joi.string().allow('').default(''),
     TWILIO_FROM: Joi.string().allow('').default(''),
 
+    // MSG91 (India-focused OTP provider, no billing setup needed)
+    MSG91_AUTH_KEY: Joi.string().allow('').default(''),
+    MSG91_TEMPLATE_ID: Joi.string().allow('').default(''),
+    MSG91_SENDER_ID: Joi.string().allow('').default('SAVKIR'),
+
+    // SMTP for email OTPs + order confirmations (Gmail SMTP is free 500/day)
+    SMTP_HOST: Joi.string().allow('').default(''),
+    SMTP_PORT: Joi.number().default(587),
+    SMTP_USER: Joi.string().allow('').default(''),
+    SMTP_PASS: Joi.string().allow('').default(''),
+    SMTP_FROM: Joi.string().allow('').default(''),
+
     // Razorpay (optional in dev)
     RAZORPAY_KEY_ID: Joi.string().allow('').default(''),
     RAZORPAY_KEY_SECRET: Joi.string().allow('').default(''),
@@ -100,6 +112,18 @@ module.exports = {
     authToken: envVars.TWILIO_AUTH_TOKEN,
     messagingServiceSid: envVars.TWILIO_MESSAGING_SERVICE_SID,
     from: envVars.TWILIO_FROM,
+  },
+  msg91: {
+    authKey: envVars.MSG91_AUTH_KEY,
+    templateId: envVars.MSG91_TEMPLATE_ID,
+    senderId: envVars.MSG91_SENDER_ID,
+  },
+  smtp: {
+    host: envVars.SMTP_HOST,
+    port: envVars.SMTP_PORT,
+    user: envVars.SMTP_USER,
+    pass: envVars.SMTP_PASS,
+    from: envVars.SMTP_FROM,
   },
   razorpay: {
     keyId: envVars.RAZORPAY_KEY_ID,
