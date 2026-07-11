@@ -16,6 +16,9 @@ const couponRoutes = require('../../modules/coupon/coupon.route');
 const zoneRoutes = require('../../modules/deliveryZone/deliveryZone.route');
 const orderRoutes = require('../../modules/order/order.route');
 const riderRoute = require('../../modules/rider/rider.route');
+const wishlistRoute = require('../../modules/wishlist/wishlist.route');
+const waitlistRoute = require('../../modules/waitlist/waitlist.route');
+const statsRoute = require('../../modules/stats/stats.route');
 
 const router = express.Router();
 
@@ -24,12 +27,15 @@ const routes = [
   { path: '/auth', route: authRoute },
   { path: '/public', route: publicRoute },
   { path: '/public/delivery', route: zoneRoutes.publicRouter },
+  { path: '/public/coupons', route: couponRoutes.publicRouter },
+  { path: '/public/waitlist', route: waitlistRoute },
 
   // Customer
   { path: '/addresses', route: addressRoute },
   { path: '/cart', route: cartRoute },
   { path: '/cart/coupon', route: couponRoutes.customerRouter },
   { path: '/orders', route: orderRoutes.customerRouter },
+  { path: '/wishlist', route: wishlistRoute },
 
   // Admin (protected)
   { path: '/admin/settings', route: settingsRoute },
@@ -43,6 +49,7 @@ const routes = [
   { path: '/admin/delivery-zones', route: zoneRoutes.adminRouter },
   { path: '/admin/orders', route: orderRoutes.adminRouter },
   { path: '/admin/riders', route: riderRoute },
+  { path: '/admin/stats', route: statsRoute },
 ];
 
 routes.forEach((r) => router.use(r.path, r.route));

@@ -13,4 +13,26 @@ adminRouter.delete('/:id', auth('manageCoupons'), validate(validation.byId), con
 const customerRouter = express.Router();
 customerRouter.post('/apply', auth('manageOwnCart'), validate(validation.apply), controller.apply);
 
-module.exports = { adminRouter, customerRouter };
+/** Public: list active coupons for customer offers page */
+const publicRouter = express.Router();
+publicRouter.get('/', async (req, res, next) => {
+  try {
+    const { Coupon } = require('../../models');
+    const now = new Date();
+    const list = await Coupon.find({
+      isActive: true,
+      $and: [
+        { $or: [{ validFrom: { $exists: false } }, { validFrom: null }, { validFrom: { $lte: now } }] },
+        { $or: [{ validTo: { $exists: false } }, { validTo: null }, { validTo: { $gte: now } }] },
+      ],
+    })
+      .sort({ createdAt: -1 })
+      .limit(30)
+      .select('code title subtitle type value cap minCart validTo');
+    res.json({ success: true, data: list });
+  } catch (e) {
+    next(e);
+  }
+});
+
+module.exports = { adminRouter, customerRouter, publicRouter };

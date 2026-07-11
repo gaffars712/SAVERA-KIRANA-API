@@ -13,3 +13,5 @@ module.exports.Coupon = require('./coupon.model');
 module.exports.DeliveryZone = require('./deliveryZone.model');
 module.exports.Order = require('./order.model');
 module.exports.Rider = require('./rider.model');
+module.exports.Wishlist = require('./wishlist.model');
+module.exports.Waitlist = require('./waitlist.model');
