@@ -30,6 +30,16 @@ const adminLogin = catchAsync(async (req, res) => {
   });
 });
 
+const firebasePhone = catchAsync(async (req, res) => {
+  const { idToken, name } = req.body;
+  const result = await authService.firebasePhoneVerify(idToken, name);
+  res.status(httpStatus.OK).json({
+    success: true,
+    message: result.isNew ? 'Account created' : 'Logged in',
+    data: result,
+  });
+});
+
 const refresh = catchAsync(async (req, res) => {
   const tokens = await authService.refreshTokens(req.body.refreshToken);
   res.status(httpStatus.OK).json({ success: true, data: { tokens } });
@@ -39,4 +49,4 @@ const me = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).json({ success: true, data: { user: req.user } });
 });
 
-module.exports = { requestOtp, verifyOtp, adminLogin, refresh, me };
+module.exports = { requestOtp, verifyOtp, adminLogin, refresh, me, firebasePhone };

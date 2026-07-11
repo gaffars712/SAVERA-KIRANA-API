@@ -10,12 +10,28 @@ const productRoute = require('../../modules/product/product.route');
 const bannerRoute = require('../../modules/banner/banner.route');
 const publicRoute = require('../../modules/public/public.route');
 
+const addressRoute = require('../../modules/address/address.route');
+const cartRoute = require('../../modules/cart/cart.route');
+const couponRoutes = require('../../modules/coupon/coupon.route');
+const zoneRoutes = require('../../modules/deliveryZone/deliveryZone.route');
+const orderRoutes = require('../../modules/order/order.route');
+const riderRoute = require('../../modules/rider/rider.route');
+
 const router = express.Router();
 
 const routes = [
+  // Public
   { path: '/auth', route: authRoute },
+  { path: '/public', route: publicRoute },
+  { path: '/public/delivery', route: zoneRoutes.publicRouter },
 
-  // Admin (protected) — mounted under /admin/*
+  // Customer
+  { path: '/addresses', route: addressRoute },
+  { path: '/cart', route: cartRoute },
+  { path: '/cart/coupon', route: couponRoutes.customerRouter },
+  { path: '/orders', route: orderRoutes.customerRouter },
+
+  // Admin (protected)
   { path: '/admin/settings', route: settingsRoute },
   { path: '/admin/admins', route: adminRoute },
   { path: '/admin/upload', route: uploadRoute },
@@ -23,9 +39,10 @@ const routes = [
   { path: '/admin/brands', route: brandRoute },
   { path: '/admin/products', route: productRoute },
   { path: '/admin/banners', route: bannerRoute },
-
-  // Public (no auth) — mounted under /public/*
-  { path: '/public', route: publicRoute },
+  { path: '/admin/coupons', route: couponRoutes.adminRouter },
+  { path: '/admin/delivery-zones', route: zoneRoutes.adminRouter },
+  { path: '/admin/orders', route: orderRoutes.adminRouter },
+  { path: '/admin/riders', route: riderRoute },
 ];
 
 routes.forEach((r) => router.use(r.path, r.route));

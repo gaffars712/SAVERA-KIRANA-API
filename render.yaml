@@ -1,0 +1,79 @@
+# Savera Kirana API — Render blueprint
+# https://render.com/docs/blueprint-spec
+#
+# Deploy: push this repo to GitHub, then on Render → New → Blueprint → connect repo.
+# All secrets marked `sync: false` must be set manually in the Render dashboard.
+
+services:
+  - type: web
+    name: savera-kirana-api
+    runtime: node
+    region: singapore              # closest to India — change if needed
+    plan: free                     # spins down after 15 min idle; upgrade for production
+    branch: main
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: REMOTE_BASE_URL
+        sync: false                # your Render URL, e.g. https://savera-kirana-api.onrender.com
+
+      # MongoDB Atlas
+      - key: MONGODB_URL
+        sync: false
+
+      # JWT — generate a long random string
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_ACCESS_EXPIRATION_MINUTES
+        value: 60
+      - key: JWT_REFRESH_EXPIRATION_MINUTES
+        value: 43200
+
+      # Super Admin seeder
+      - key: SUPER_ADMIN_NAME
+        sync: false
+      - key: SUPER_ADMIN_EMAIL
+        sync: false
+      - key: SUPER_ADMIN_PASSWORD
+        sync: false
+      - key: SUPER_ADMIN_PHONE
+        sync: false
+
+      # Cloudinary (image hosting)
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_UPLOAD_FOLDER
+        value: savera-kirana
+
+      # Firebase Phone Auth (customer login in production)
+      - key: FIREBASE_SERVICE_ACCOUNT_B64
+        sync: false
+
+      # Razorpay (payments)
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+
+      # SMS (optional — Firebase handles OTP)
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_MESSAGING_SERVICE_SID
+        sync: false
+
+      # CORS — comma-separated frontend origins
+      - key: CORS_ORIGINS
+        sync: false                # e.g. https://savera-kirana.vercel.app,https://admin.saverakirana.in

@@ -26,4 +26,11 @@ const refresh = {
   body: Joi.object({ refreshToken: Joi.string().required() }),
 };
 
-module.exports = { requestOtp, verifyOtp, adminLogin, refresh };
+const firebasePhone = {
+  body: Joi.object({
+    idToken: Joi.string().required(),
+    name: Joi.string().max(80).optional().allow(''),
+  }),
+};
+
+module.exports = { requestOtp, verifyOtp, adminLogin, refresh, firebasePhone };

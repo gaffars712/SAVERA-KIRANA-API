@@ -7,7 +7,8 @@
     "start": "cross-env NODE_ENV=production node src/index.js",
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",
     "seed:super-admin": "cross-env NODE_ENV=development node src/scripts/seedSuperAdmin.js",
-    "seed:catalog": "cross-env NODE_ENV=development node src/scripts/seedCatalog.js"
+    "seed:catalog": "cross-env NODE_ENV=development node src/scripts/seedCatalog.js",
+    "smoke:checkout": "cross-env NODE_ENV=development node src/scripts/smokeTestCheckout.js"
   },
   "author": "Piyush",
   "license": "ISC",
@@ -26,6 +27,7 @@
     "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^7.1.5",
     "express-session": "^1.18.0",
+    "firebase-admin": "^12.3.0",
     "google-auth-library": "^9.11.0",
     "googleapis": "^140.0.0",
     "helmet": "^7.1.0",

@@ -10,6 +10,9 @@ const router = express.Router();
 router.post('/otp/request', validate(validation.requestOtp), controller.requestOtp);
 router.post('/otp/verify', validate(validation.verifyOtp), controller.verifyOtp);
 
+/* Firebase Phone Auth (customer — production login) */
+router.post('/firebase/phone', validate(validation.firebasePhone), controller.firebasePhone);
+
 /* Admin login */
 router.post('/admin/login', validate(validation.adminLogin), controller.adminLogin);
 

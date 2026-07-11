@@ -47,6 +47,9 @@ const envVarsSchema = Joi.object()
     AWS_SECRET_ACCESS_KEY: Joi.string().allow('').default(''),
     AWS_S3_BUCKET: Joi.string().allow('').default(''),
 
+    // Firebase Phone Auth (optional in dev; required for production customer login)
+    FIREBASE_SERVICE_ACCOUNT_B64: Joi.string().allow('').default(''),
+
     // Google (optional)
     CLIENT_ID: Joi.string().allow('').default(''),
     CLIENT_SECRET: Joi.string().allow('').default(''),
@@ -118,5 +121,8 @@ module.exports = {
   google: {
     clientId: envVars.CLIENT_ID,
     clientSecret: envVars.CLIENT_SECRET,
+  },
+  firebase: {
+    serviceAccountB64: envVars.FIREBASE_SERVICE_ACCOUNT_B64,
   },
 };

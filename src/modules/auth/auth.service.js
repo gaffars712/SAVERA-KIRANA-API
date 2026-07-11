@@ -8,6 +8,7 @@ const { CUSTOMER } = require('../../config/roles');
 const { User, Admin, OTP } = require('../../models');
 const ApiError = require('../../utils/ApiError');
 const smsService = require('../../services/sms.service');
+const firebaseService = require('../../services/firebase.service');
 
 /* ─────────────────────── Token helpers ─────────────────────── */
 
@@ -145,10 +146,54 @@ const refreshTokens = async (refreshToken) => {
   return issueAuthTokens({ _id: payload.sub, role: payload.role });
 };
 
+/* ─────────────────── Firebase Phone Auth ─────────────────── */
+
+/**
+ * Verify a Firebase ID token from the client (customer web/mobile) and
+ * create/find our own User by phone, then issue our JWT pair.
+ */
+const firebasePhoneVerify = async (idToken, name) => {
+  if (!firebaseService.isConfigured()) {
+    throw new ApiError(httpStatus.SERVICE_UNAVAILABLE, 'Firebase Phone Auth is not configured on the server');
+  }
+  let decoded;
+  try {
+    decoded = await firebaseService.verifyIdToken(idToken);
+  } catch (e) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Firebase token: ' + e.message);
+  }
+
+  const phone = decoded.phone_number;
+  if (!phone) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Firebase token has no phone_number claim');
+  }
+
+  let user = await User.findOne({ phone });
+  let isNew = false;
+  if (!user) {
+    isNew = true;
+    user = await User.create({
+      phone,
+      name: name || '',
+      role: CUSTOMER,
+      isPhoneVerified: true,
+    });
+  } else {
+    user.isPhoneVerified = true;
+    user.lastLoginAt = new Date();
+    if (name && !user.name) user.name = name;
+    await user.save();
+  }
+
+  const tokens = issueAuthTokens({ _id: user._id, role: CUSTOMER });
+  return { user, tokens, isNew };
+};
+
 module.exports = {
   requestOtp,
   verifyOtp,
   adminLogin,
   refreshTokens,
   issueAuthTokens,
+  firebasePhoneVerify,
 };
