@@ -1,81 +1,37 @@
 const express = require('express');
-const config = require('../../config/config');
-const authRoute = require('./auth.route');
-const userRoute = require("./user.route");
-const productRoute = require("./product.route")
-const cartRoute = require("./cart.route")
-const notificationRoute = require("./notification.route")
-const docsRoute = require('./docs.route');
-const auctionRoute = require('./auction.route');
-const serviceProviderRoute = require("./serviceProvider.route")
-const ratingRoute = require("./rating.route")
-const orderRoute = require("./order.route")
-const { uploadFile } = require('../../utils/fileUpload');
-const deleteFile = require('../../utils/deleteFile');
+
+const authRoute = require('../../modules/auth/auth.route');
+const adminRoute = require('../../modules/admin/admin.route');
+const settingsRoute = require('../../modules/settings/settings.route');
+const uploadRoute = require('../../modules/upload/upload.route');
+const categoryRoute = require('../../modules/category/category.route');
+const brandRoute = require('../../modules/brand/brand.route');
+const productRoute = require('../../modules/product/product.route');
+const bannerRoute = require('../../modules/banner/banner.route');
+const publicRoute = require('../../modules/public/public.route');
+
 const router = express.Router();
 
-const defaultRoutes = [
-  {
-    path: '/auth',
-    route: authRoute,
-  },
-  {
-    path: '/user',
-    route: userRoute,
-  },
-  {
-    path: '/product',
-    route: productRoute,
-  },
-  {
-    path: '/auctions',
-    route: auctionRoute,
-  },
-  {
-    path: '/service-provider',
-    route: serviceProviderRoute,
-  },
-  {
-    path: '/notification',
-    route: notificationRoute,
-  },
-  {
-    path: '/cart',
-    route: cartRoute,
-  },
-  {
-    path: '/order',
-    route: orderRoute,
-  },
-  {
-    path: '/rating',
-    route: ratingRoute,
-  },
+const routes = [
+  { path: '/auth', route: authRoute },
+
+  // Admin (protected) — mounted under /admin/*
+  { path: '/admin/settings', route: settingsRoute },
+  { path: '/admin/admins', route: adminRoute },
+  { path: '/admin/upload', route: uploadRoute },
+  { path: '/admin/categories', route: categoryRoute },
+  { path: '/admin/brands', route: brandRoute },
+  { path: '/admin/products', route: productRoute },
+  { path: '/admin/banners', route: bannerRoute },
+
+  // Public (no auth) — mounted under /public/*
+  { path: '/public', route: publicRoute },
 ];
 
-const devRoutes = [
-  // routes available only in development mode
-  {
-    path: '/docs',
-    route: docsRoute,
-  },
-];
+routes.forEach((r) => router.use(r.path, r.route));
 
-defaultRoutes.forEach((route) => {
-  router.use(route.path, route.route);
-});
-
-router.route('/upload-file').post(uploadFile);
-
-
-router.route('/delete-file').post(async (req, res) => {deleteFile(req,res)});
-
-
-/* istanbul ignore next */
-if (config.env === 'development') {
-  devRoutes.forEach((route) => {
-    router.use(route.path, route.route);
-  });
-}
+router.get('/health', (req, res) =>
+  res.json({ success: true, uptime: process.uptime(), env: process.env.NODE_ENV })
+);
 
 module.exports = router;

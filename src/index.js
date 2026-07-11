@@ -5,12 +5,23 @@ const config = require('./config/config');
 const logger = require('./config/logger');
 
 let server;
-mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
+
+async function start() {
+  await mongoose.connect(config.mongoose.url, config.mongoose.options);
   logger.info('Connected to MongoDB');
+
+  // Ensure Settings singleton exists on first boot
+  const { Settings } = require('./models');
+  await Settings.getSingleton();
+
   server = app.listen(config.port, () => {
-    // processQueue()
-    logger.info(`Listening to port ${config.port}`);
+    logger.info(`Savera Kirana API listening on :${config.port}  (${config.env})`);
   });
+}
+
+start().catch((err) => {
+  logger.error('Startup failed: ' + (err.message || err));
+  process.exit(1);
 });
 
 const exitHandler = () => {
@@ -24,17 +35,15 @@ const exitHandler = () => {
   }
 };
 
-const unexpectedErrorHandler = (error) => {
-  logger.error(error);
+process.on('uncaughtException', (e) => {
+  logger.error(e);
   exitHandler();
-};
-
-process.on('uncaughtException', unexpectedErrorHandler);
-process.on('unhandledRejection', unexpectedErrorHandler);
-
+});
+process.on('unhandledRejection', (e) => {
+  logger.error(e);
+  exitHandler();
+});
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received');
-  if (server) {
-    server.close();
-  }
+  if (server) server.close();
 });

@@ -1,46 +1,27 @@
-const mongoose = require("mongoose");
-const { toJSON, paginate } = require("./plugins");
-const counterIncrementor = require("../utils/counterIncrementer");
+const mongoose = require('mongoose');
+const { toJSON } = require('./plugins');
 
 const OtpSchema = mongoose.Schema(
-	{
-		userId: {
-			type: mongoose.SchemaTypes.ObjectId,
-			required: true,
-		},
-		phone: {
-			type: String,
-			required: true,
-		},
-		type: {
-			type: String,
-			required: true,
-		},
-		otp: {
-			type: Number,
-			required: true,
-		},
-		expires: {
-			type: Date,
-		},
-		seqId: { type: Number },
-	},
-	{
-		timestamps: true,
-	}
+  {
+    phone: { type: String, required: true, index: true },
+    otp: { type: String, required: true },
+    purpose: {
+      type: String,
+      enum: ['login', 'phoneVerify'],
+      default: 'login',
+    },
+    attempts: { type: Number, default: 0 },
+    expiresAt: {
+      type: Date,
+      required: true,
+      // TTL index — Mongo auto-deletes expired docs
+      index: { expires: 0 },
+    },
+  },
+  { timestamps: true }
 );
-// add plugin that converts mongoose to json
+
 OtpSchema.plugin(toJSON);
-OtpSchema.plugin(paginate);
 
-OtpSchema.pre("save", async function (next) {
-	const doc = this;
-	doc.seqId = await counterIncrementor("Otp");
-	next();
-});
-
-/**
- * @typedef OtpSchema
- */
-const OTP = mongoose.model("Otp", OtpSchema);
+const OTP = mongoose.model('otps', OtpSchema);
 module.exports = OTP;

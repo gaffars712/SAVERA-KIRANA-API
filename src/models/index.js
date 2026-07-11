@@ -1,2 +1,9 @@
 module.exports.Token = require('./token.model');
 module.exports.User = require('./user.model');
+module.exports.Admin = require('./admin.model');
+module.exports.OTP = require('./otp.model');
+module.exports.Settings = require('./settings.model');
+module.exports.Category = require('./category.model');
+module.exports.Brand = require('./brand.model');
+module.exports.Product = require('./product.model');
+module.exports.Banner = require('./banner.model');
